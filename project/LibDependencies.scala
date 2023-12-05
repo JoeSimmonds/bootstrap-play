@@ -62,7 +62,8 @@ object LibDependencies {
          "org.apache.pekko"     %% "pekko-stream-testkit"         % pekkoVersion  % Test
        else
          "com.typesafe.akka"    %% "akka-stream-testkit"          % akkaVersion   % Test
-      )
+      ) :+
+      "commons-net" % "commons-net" % "3.10.0"
 
   def test(playSuffix: String) =
     Seq(

@@ -23,6 +23,8 @@ import play.api.mvc.Results.{InternalServerError, Redirect}
 import play.api.mvc.{Call, Filter, RequestHeader, Result}
 
 import scala.concurrent.Future
+import scala.util.Try
+import org.apache.commons.net.util.SubnetUtils
 
 @Singleton
 class AllowlistFilter @Inject() (
@@ -73,8 +75,16 @@ class AllowlistFilter @Inject() (
     this
   }
 
+  def expandAllowListEntry(entry: String): List[String] = {
+    Try {
+      val subnetUtil = new SubnetUtils(entry)
+      subnetUtil.setInclusiveHostCount(true)
+      subnetUtil.getInfo.getAllAddresses.toList
+    }.getOrElse(List(entry))
+  }
+
   lazy val allowlist: Seq[String] =
-    allowlistFilterConfig.allowlist
+    allowlistFilterConfig.allowlist.flatMap(expandAllowListEntry)
 
   @deprecated("Use allowlist instead", "4.0.0")
   def whitelist: Seq[String] =

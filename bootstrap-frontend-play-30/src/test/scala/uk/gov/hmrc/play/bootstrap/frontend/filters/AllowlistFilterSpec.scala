@@ -101,6 +101,33 @@ class AllowlistFilterSpec
       }
     }
 
+    "expand the netmask to the Full Range" when {
+      "given a netmask in CIDR notation" in {
+        val ipsWithNetmask = List("192.168.2.128/29")
+
+        forAll(otherConfigGen, arbitrary[String], arbitrary[Seq[String]]) {
+          (otherConfig, redirectUrlWhenDenied, excluded) =>
+            val config = Configuration(
+              (otherConfig ++
+                Map(
+                  "bootstrap.filters.allowlist.redirectUrlWhenDenied" -> redirectUrlWhenDenied,
+                  "bootstrap.filters.allowlist.excluded" -> excluded,
+                  "bootstrap.filters.allowlist.ips" -> ipsWithNetmask,
+                  "bootstrap.filters.allowlist.enabled" -> true
+                )
+                ).toSeq: _*
+            )
+
+            val allowlistFilter = new AllowlistFilter(config, mockMaterializer)
+
+            allowlistFilter.allowlist should contain theSameElementsAs List(
+              "192.168.2.128","192.168.2.129","192.168.2.130","192.168.2.131",
+              "192.168.2.132","192.168.2.133","192.168.2.134","192.168.2.135"
+            )
+        }
+      }
+    }
+
     "contain all of the values" when {
       "given a comma-separated list of values" in {
         val gen = Gen.nonEmptyListOf(Gen.alphaNumStr suchThat (_.nonEmpty))
